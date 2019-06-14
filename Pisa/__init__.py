@@ -13,6 +13,7 @@ from .pisa import (
     generate_dendrogram,
     induced_graph,
     load_binary,
+    purity,
 )
 
 __version__ = "0.13"

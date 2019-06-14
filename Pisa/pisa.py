@@ -163,7 +163,9 @@ def best_partition(graph,
                    weight='weight',
                    resolution=1.,
                    randomize=None,
-                   random_state=None):
+                   random_state=None,
+                   alpha=0.5,
+                   beta=0.5):
     """Compute the partition of the graph nodes which maximises the modularity
     (or try..) using the Louvain heuristices
 
@@ -246,7 +248,9 @@ def best_partition(graph,
                                 weight,
                                 resolution,
                                 randomize,
-                                random_state)
+                                random_state,
+                                alpha,
+                                beta)
     return partition_at_level(dendo, len(dendo) - 1), labels
 
 
@@ -255,7 +259,9 @@ def generate_dendrogram(graph,
                         weight='weight',
                         resolution=1.,
                         randomize=None,
-                        random_state=None):
+                        random_state=None,
+                        alpha=0.5,
+                        beta=0.5):
     """Find communities in the graph and return the associated dendrogram
 
     A dendrogram is a tree and each level is a partition of the graph nodes.
@@ -344,7 +350,7 @@ def generate_dendrogram(graph,
     status = Status()
     status.init(current_graph, weight, part_init)
     status_list = list()
-    __one_level(current_graph, status, weight, resolution, random_state)
+    __one_level(current_graph, status, weight, resolution, random_state, alpha, beta)
     new_mod = __modularity(status)
     partition, status = __renumber(status.node2com, status)
     status_list.append(partition)
@@ -353,7 +359,7 @@ def generate_dendrogram(graph,
     status.init(current_graph, weight)
 
     while True:
-        __one_level(current_graph, status, weight, resolution, random_state)
+        __one_level(current_graph, status, weight, resolution, random_state, alpha, beta)
         new_mod = __modularity(status)
         if new_mod - mod < __MIN:
             break
@@ -481,16 +487,22 @@ def load_binary(data):
     return graph
 
 
-def __one_level(graph, status, weight_key, resolution, random_state):
+def __one_level(graph, status, weight_key, resolution, random_state, alpha, beta):
     """Compute one level of communities
     """
     modified = True
     nb_pass_done = 0
     cur_mod = __modularity(status)
     new_mod = cur_mod
+    curr_purity = __overall_purity(status)
+    new_purity = curr_purity
+
+    print(curr_purity)
 
     while modified and nb_pass_done != __PASS_MAX:
         cur_mod = new_mod
+        curr_purity = new_purity
+
         modified = False
         nb_pass_done += 1
 
@@ -505,10 +517,20 @@ def __one_level(graph, status, weight_key, resolution, random_state):
             best_com = com_node
             best_increase = 0
             for com, dnc in random_state.permutation(list(neigh_communities.items())):
+
+                # increasecost label
+                initial_labels = status.com_attr[com]
+                incr_labels = status.com_attr[com_node]
+                incr_attr = __delta_purity(initial_labels, incr_labels)
+
+                # increase cost modularity
                 incr = remove_cost + resolution * dnc - \
                        status.degrees.get(com, 0.) * degc_totw
-                if incr > best_increase:
-                    best_increase = incr
+
+                total_incr = alpha * incr_attr + beta * incr
+
+                if total_incr > best_increase:
+                    best_increase = total_incr
                     best_com = com
             __insert(node, best_com,
                      neigh_communities.get(best_com, 0.), status)
@@ -516,9 +538,13 @@ def __one_level(graph, status, weight_key, resolution, random_state):
                 modified = True
 
         new_mod = __modularity(status)
-        if new_mod - cur_mod < __MIN:
+        new_purity = __overall_purity(status)
+
+        score = alpha * (new_purity - curr_purity) + beta * (new_mod - cur_mod)
+
+        if score < __MIN:
+
             # cleaning com labels
-            #print(status.com_attr)
             com2remove = []
             for com in status.com_attr:
                 for label in status.com_attr[com]:
@@ -527,9 +553,55 @@ def __one_level(graph, status, weight_key, resolution, random_state):
 
             for k in com2remove:
                 status.com_attr.pop(k, None)
-            #print(status.com_attr)
             break
 
+
+def __delta_purity(original_attr1, new_attr2):
+
+    total_original = 0
+    purity_original = []
+    overall = {}
+
+    for k, v in original_attr1.items():
+        total_original += v
+        purity_original.append(v)
+        overall[k] = v
+
+    total_nodes = total_original
+
+    purity_original = max(purity_original)/total_original
+
+    for k, v in new_attr2.items():
+        total_nodes += v
+        if k in overall:
+            overall[k] += v
+        else:
+            overall[k] = v
+
+    overall = max(list(overall.values())) / total_nodes
+
+    increment = overall - purity_original
+    return increment
+
+
+def __overall_purity(status):
+    purities = []
+    for _, labels in status.com_attr.items():
+        purity = []
+        total_nodes = 0
+        for _, v in labels.items():
+            total_nodes += v
+            purity.append(v)
+        if total_nodes > 0:
+            purity = max(purity)/total_nodes
+            purities.append(purity)
+    return np.mean(purities)
+
+
+def purity(com_attr):
+    st = Status()
+    st.com_attr = com_attr
+    return __overall_purity(st)
 
 def __neighcom(node, graph, status, weight_key):
     """
@@ -589,7 +661,6 @@ def __insert(node, com, weight, status):
     #         label_count += status.com_attr[n][i]
     # print("insert", label_count)
     # assert label_count == 34
-
 
 
 def __modularity(status):
