@@ -8,17 +8,15 @@ import array
 
 import numbers
 import warnings
+from copy import deepcopy
 
 import networkx as nx
 import numpy as np
 
 from .status import Status
 
-__author__ = """Thomas Aynaud (thomas.aynaud@lip6.fr)"""
-#    Copyright (C) 2009 by
-#    Thomas Aynaud <thomas.aynaud@lip6.fr>
-#    All rights reserved.
-#    BSD license.
+__author__ = """Louvain algorithm: Thomas Aynaud (thomas.aynaud@lip6.fr)\n
+                Pisa extension: Giulio Rossetti, Salvatore Citraro"""
 
 __PASS_MAX = -1
 __MIN = 0.0000001
@@ -194,6 +192,11 @@ def best_partition(graph,
         If RandomState instance, random_state is the random number generator;
         If None, the random number generator is the RandomState instance used
         by `np.random`.
+    alpha : float
+        The weight to give to the purity component. The value must lie in [0,1] and
+        it sum with beta should give 1.
+    beta :  The weight to give to the modularity component. The value must lie in [0,1] and
+        it sum with alpha should give 1.
 
     Returns
     -------
@@ -243,6 +246,10 @@ def best_partition(graph,
     >>> nx.draw_networkx_edges(G, pos, alpha=0.5)
     >>> plt.show()
     """
+
+    if alpha < 0 or beta < 0 or alpha > 1 or beta > 1 or alpha + beta != 1:
+        raise ValueError("Beta and Alpha must be positive floating point numbers in [0,1] that sum up to 1")
+
     dendo, labels = generate_dendrogram(graph,
                                 partition,
                                 weight,
@@ -429,8 +436,6 @@ def __renumber(dictionary, status):
 
     old_com_2_new_com = {}
 
-#    print(dictionary.items())
-
     for key in dictionary.keys():
         value = dictionary[key]
         new_value = new_values.get(value, -1)
@@ -445,14 +450,10 @@ def __renumber(dictionary, status):
 
     temp = dict([])
 
-    # print("\nold_com_2_new",old_com_2_new_com.items())
-    # print("coms", set(dictionary.items()))
-    # print("ret",set(ret.values()))
-    # print("com_attr", status.com_attr.items())
-
     for k in set(dictionary.values()):
         com_id = old_com_2_new_com[k]
         temp[com_id] = status.com_attr[k]
+
 
     status.com_attr = temp
 
@@ -497,8 +498,6 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha, beta
     curr_purity = __overall_purity(status)
     new_purity = curr_purity
 
-    print(curr_purity)
-
     while modified and nb_pass_done != __PASS_MAX:
         cur_mod = new_mod
         curr_purity = new_purity
@@ -514,14 +513,16 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha, beta
                 (status.degrees.get(com_node, 0.) - status.gdegrees.get(node, 0.)) * degc_totw
             __remove(node, com_node,
                      neigh_communities.get(com_node, 0.), status)
+
             best_com = com_node
             best_increase = 0
+            best_size_incr = 0
             for com, dnc in random_state.permutation(list(neigh_communities.items())):
 
-                # increasecost label
-                initial_labels = status.com_attr[com]
-                incr_labels = status.com_attr[com_node]
-                incr_attr = __delta_purity(initial_labels, incr_labels)
+                # increase cost label, gain community size
+                initial_labels = status.attr[com_node]
+                incr_labels = status.com_attr[com]
+                incr_attr, incr_size = __delta_purity_size(initial_labels, incr_labels)
 
                 # increase cost modularity
                 incr = remove_cost + resolution * dnc - \
@@ -529,8 +530,10 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha, beta
 
                 total_incr = alpha * incr_attr + beta * incr
 
-                if total_incr > best_increase:
+                # check for increase in quality or in community size (with stable quality)
+                if total_incr > best_increase or (total_incr == best_increase and incr_size > best_size_incr):
                     best_increase = total_incr
+                    best_size_incr = incr_size
                     best_com = com
             __insert(node, best_com,
                      neigh_communities.get(best_com, 0.), status)
@@ -543,20 +546,10 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha, beta
         score = alpha * (new_purity - curr_purity) + beta * (new_mod - cur_mod)
 
         if score < __MIN:
-
-            # cleaning com labels
-            com2remove = []
-            for com in status.com_attr:
-                for label in status.com_attr[com]:
-                    if status.com_attr[com][label] == 0:
-                        com2remove.append(com)
-
-            for k in com2remove:
-                status.com_attr.pop(k, None)
             break
 
 
-def __delta_purity(original_attr1, new_attr2):
+def __delta_purity_size(original_attr1, new_attr2):
 
     total_original = 0
     purity_original = []
@@ -581,27 +574,30 @@ def __delta_purity(original_attr1, new_attr2):
     overall = max(list(overall.values())) / total_nodes
 
     increment = overall - purity_original
-    return increment
+    delta_size = (total_nodes - total_original) / total_original
+
+    return increment, delta_size
 
 
 def __overall_purity(status):
     purities = []
     for _, labels in status.com_attr.items():
-        purity = []
+        score = []
         total_nodes = 0
         for _, v in labels.items():
             total_nodes += v
-            purity.append(v)
+            score.append(v)
         if total_nodes > 0:
-            purity = max(purity)/total_nodes
-            purities.append(purity)
+            score = max(score)/total_nodes
+            purities.append(score)
     return np.mean(purities)
 
 
 def purity(com_attr):
     st = Status()
-    st.com_attr = com_attr
+    st.com_attr = deepcopy(com_attr)
     return __overall_purity(st)
+
 
 def __neighcom(node, graph, status, weight_key):
     """
@@ -631,13 +627,6 @@ def __remove(node, com, weight, status):
         if label in status.com_attr[com] and status.attr[node][label] > 0:
             status.com_attr[com][label] -= status.attr[node][label]
 
-    # test (num nodes -1)
-    # label_count = 0
-    # for n in status.com_attr:
-    #     for i in status.com_attr[n]:
-    #         label_count += status.com_attr[n][i]
-    # assert 34 > label_count
-
 
 def __insert(node, com, weight, status):
     """ Insert node into Pisa and modify status"""
@@ -653,14 +642,6 @@ def __insert(node, com, weight, status):
             status.com_attr[com][label] += status.attr[node][label]
         else:
             status.com_attr[com][label] = status.attr[node][label]
-
-    # test (num nodes)
-    # label_count = 0
-    # for n in status.com_attr:
-    #     for i in status.com_attr[n]:
-    #         label_count += status.com_attr[n][i]
-    # print("insert", label_count)
-    # assert label_count == 34
 
 
 def __modularity(status):
