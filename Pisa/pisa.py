@@ -369,6 +369,9 @@ def generate_dendrogram(graph,
         __one_level(current_graph, status, weight, resolution, random_state, alpha, beta)
         new_mod = __modularity(status)
         if new_mod - mod < __MIN:
+            if beta == 0:
+                partition, status = __renumber(status.node2com, status)
+                status_list.append(partition)
             break
         partition, status = __renumber(status.node2com, status)
         status_list.append(partition)
@@ -453,7 +456,6 @@ def __renumber(dictionary, status):
     for k in set(dictionary.values()):
         com_id = old_com_2_new_com[k]
         temp[com_id] = status.com_attr[k]
-
 
     status.com_attr = temp
 
@@ -642,6 +644,12 @@ def __insert(node, com, weight, status):
             status.com_attr[com][label] += status.attr[node][label]
         else:
             status.com_attr[com][label] = status.attr[node][label]
+
+    ###################
+    from collections import defaultdict
+    coms = defaultdict(int)
+    for n, c in status.node2com.items():
+        coms[c] += 1
 
 
 def __modularity(status):
