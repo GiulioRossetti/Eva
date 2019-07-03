@@ -8,7 +8,7 @@ import random
 #g = nx.karate_club_graph()
 #club = nx.get_node_attributes(g, 'club')
 
-labels = ['one', 'two']
+labels = ['one', 'two', 'three', 'four']
 g =nx.barabasi_albert_graph(100, 5)
 
 for node in g.nodes():
@@ -21,7 +21,7 @@ print(f"Original Louvain Modularity: {mods}")
 
 
 for alpha in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
-    part, com_labels = best_partition(g, alpha=alpha, beta=1-alpha)
+    part, com_labels = best_partition(g, alpha=alpha)
 
     print("\n")
     print(f"{alpha}\{1-alpha}")
