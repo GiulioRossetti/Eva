@@ -4,8 +4,6 @@ This module implements Pisa detection.
 """
 from __future__ import print_function
 
-import array
-
 import numbers
 import warnings
 from copy import deepcopy
@@ -16,7 +14,7 @@ import numpy as np
 from .status import Status
 
 __author__ = """Louvain algorithm: Thomas Aynaud (thomas.aynaud@lip6.fr)\n
-                Pisa extension: Giulio Rossetti, Salvatore Citraro"""
+                Pisa extension: Giulio Rossetti (giulio.rossetti@isti.cnr.it), Salvatore Citraro"""
 
 __PASS_MAX = -1
 __MIN = 0.0000001
@@ -162,8 +160,7 @@ def best_partition(graph,
                    resolution=1.,
                    randomize=None,
                    random_state=None,
-                   alpha=0.5,
-                   beta=0.5):
+                   alpha=0.5):
     """Compute the partition of the graph nodes which maximises the modularity
     (or try..) using the Louvain heuristices
 
@@ -193,10 +190,7 @@ def best_partition(graph,
         If None, the random number generator is the RandomState instance used
         by `np.random`.
     alpha : float
-        The weight to give to the purity component. The value must lie in [0,1] and
-        it sum with beta should give 1.
-    beta :  The weight to give to the modularity component. The value must lie in [0,1] and
-        it sum with alpha should give 1.
+        The weight to give to the purity component. The value must lie in [0,1]
 
     Returns
     -------
@@ -247,8 +241,8 @@ def best_partition(graph,
     >>> plt.show()
     """
 
-    if alpha < 0 or beta < 0 or alpha > 1 or beta > 1 or alpha + beta != 1:
-        raise ValueError("Beta and Alpha must be positive floating point numbers in [0,1] that sum up to 1")
+    if 1 <= alpha <= 0:
+        raise ValueError("Alpha must be positive floating point numbers in [0,1]")
 
     dendo, labels = generate_dendrogram(graph,
                                 partition,
@@ -257,7 +251,7 @@ def best_partition(graph,
                                 randomize,
                                 random_state,
                                 alpha,
-                                beta)
+                                )
     return partition_at_level(dendo, len(dendo) - 1), labels
 
 
@@ -268,7 +262,7 @@ def generate_dendrogram(graph,
                         randomize=None,
                         random_state=None,
                         alpha=0.5,
-                        beta=0.5):
+                        ):
     """Find communities in the graph and return the associated dendrogram
 
     A dendrogram is a tree and each level is a partition of the graph nodes.
@@ -357,7 +351,7 @@ def generate_dendrogram(graph,
     status = Status()
     status.init(current_graph, weight, part_init)
     status_list = list()
-    __one_level(current_graph, status, weight, resolution, random_state, alpha, beta)
+    __one_level(current_graph, status, weight, resolution, random_state, alpha)
     new_mod = __modularity(status)
     new_purity = __overall_purity(status)
 
@@ -369,10 +363,10 @@ def generate_dendrogram(graph,
     status.init(current_graph, weight)
 
     while True:
-        __one_level(current_graph, status, weight, resolution, random_state, alpha, beta)
+        __one_level(current_graph, status, weight, resolution, random_state, alpha)
         new_mod = __modularity(status)
         new_purity = __overall_purity(status)
-        score = alpha * (new_purity - pur) + beta * (new_mod - mod)
+        score = alpha * (new_purity - pur) + (1-alpha) * (new_mod - mod)
 
         if score < __MIN:
             partition, status = __renumber(status.node2com, status)
@@ -468,35 +462,7 @@ def __renumber(dictionary, status):
     return ret, status
 
 
-def load_binary(data):
-    """Load binary graph as used by the cpp implementation of this algorithm
-    """
-    data = open(data, "rb")
-
-    reader = array.array("I")
-    reader.fromfile(data, 1)
-    num_nodes = reader.pop()
-    reader = array.array("I")
-    reader.fromfile(data, num_nodes)
-    cum_deg = reader.tolist()
-    num_links = reader.pop()
-    reader = array.array("I")
-    reader.fromfile(data, num_links)
-    links = reader.tolist()
-    graph = nx.Graph()
-    graph.add_nodes_from(range(num_nodes))
-    prec_deg = 0
-
-    for index in range(num_nodes):
-        last_deg = cum_deg[index]
-        neighbors = links[prec_deg:last_deg]
-        graph.add_edges_from([(index, int(neigh)) for neigh in neighbors])
-        prec_deg = last_deg
-
-    return graph
-
-
-def __one_level(graph, status, weight_key, resolution, random_state, alpha, beta):
+def __one_level(graph, status, weight_key, resolution, random_state, alpha):
     """Compute one level of communities
     """
     modified = True
@@ -536,7 +502,7 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha, beta
                 incr = remove_cost + resolution * dnc - \
                        status.degrees.get(com, 0.) * degc_totw
 
-                total_incr = alpha * incr_attr + beta * incr
+                total_incr = alpha * incr_attr + (1-alpha) * incr
 
                 # check for increase in quality or in community size (with stable quality)
                 if total_incr > best_increase or (total_incr == best_increase and incr_size > best_size_incr):
@@ -551,7 +517,7 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha, beta
         new_mod = __modularity(status)
         new_purity = __overall_purity(status)
 
-        score = alpha * (new_purity - curr_purity) + beta * (new_mod - cur_mod)
+        score = alpha * (new_purity - curr_purity) + (1-alpha) * (new_mod - cur_mod)
 
         if score < __MIN:
             break

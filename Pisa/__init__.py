@@ -12,7 +12,6 @@ from .pisa import (
     best_partition,
     generate_dendrogram,
     induced_graph,
-    load_binary,
     purity,
 )
 
