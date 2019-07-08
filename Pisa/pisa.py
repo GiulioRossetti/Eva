@@ -7,7 +7,7 @@ from __future__ import print_function
 import numbers
 import warnings
 from copy import deepcopy
-
+from collections import defaultdict
 import networkx as nx
 import numpy as np
 
@@ -526,28 +526,50 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha):
 def __delta_purity_size(original_attr1, new_attr2):
 
     total_original = 0
-    purity_original = []
-    overall = {}
+    #purity_original = []
+    #overall = {}
+    # print(original_attr1)
+    # computing totla nodes
+    # @todo: mettere a posto
+    for k, lst in original_attr1.items():
+        for _, v in lst.items():
+            total_original += v
 
-    for k, v in original_attr1.items():
-        total_original += v
-        purity_original.append(v)
-        overall[k] = v
+    purity_original = np.prod([(max(x / sum(y.values()) for x in y.values())) for y in original_attr1.values()])
+    # print(purity_original)
 
+    total_original /= len(original_attr1)
     total_nodes = total_original
 
-    purity_original = max(purity_original)/total_original
+    # computing original purity
 
-    for k, v in new_attr2.items():
-        total_nodes += v
-        if k in overall:
-            overall[k] += v
+    # print(new_attr2)
+    new_nodes = 0
+    for k, lst in new_attr2.items():
+        for _, v in lst.items():
+            new_nodes += v
+    total_nodes += new_nodes/len(new_attr2)
+
+    # print(total_nodes)
+
+    updated = deepcopy(original_attr1)
+
+    for k, lst in new_attr2.items():
+
+        if k in updated:
+            for t, v in lst.items():
+                if t in updated[k]:
+                    updated[k][t] += v
+                else:
+                    updated[k][t] = v
         else:
-            overall[k] = v
+            updated[k] = lst
 
-    overall = max(list(overall.values())) / total_nodes
+    purity_overall = np.prod([(max(x / sum(y.values()) for x in y.values())) for y in updated.values()])
 
-    increment = overall - purity_original
+    #overall = max(list(overall.values())) / total_nodes
+
+    increment = purity_overall - purity_original
     delta_size = (total_nodes - total_original) / total_original
 
     return increment, delta_size
@@ -555,15 +577,23 @@ def __delta_purity_size(original_attr1, new_attr2):
 
 def __overall_purity(status):
     purities = []
-    for _, labels in status.com_attr.items():
-        score = []
-        total_nodes = 0
-        for _, v in labels.items():
-            total_nodes += v
-            score.append(v)
-        if total_nodes > 0:
-            score = max(score)/total_nodes
-            purities.append(score)
+    #print(status)
+    for _, lst in status.com_attr.items():
+        com_pur = []
+        #print(lst)
+        for _, v in lst.items():
+            tot = sum(v.values())
+            if tot == 0:
+                continue
+            scores = []
+
+            for k in v.values():
+                scores.append(k/tot)
+
+            com_pur.append(max(scores))
+        purities.append(np.prod(com_pur))
+
+   # print(np.mean(purities))
     return np.mean(purities)
 
 
@@ -598,8 +628,11 @@ def __remove(node, com, weight, status):
 
     for v in status.attr[node].keys():
         label = v
-        if label in status.com_attr[com] and status.attr[node][label] > 0:
-            status.com_attr[com][label] -= status.attr[node][label]
+        #print(label, status.attr[node][label])
+        if label in status.com_attr[com]:
+            for k, v in status.attr[node][label].items():
+                if v > 0:
+                    status.com_attr[com][label][k] -= status.attr[node][label][k]
 
 
 def __insert(node, com, weight, status):
@@ -613,7 +646,12 @@ def __insert(node, com, weight, status):
     for v in status.attr[node].keys():
         label = v
         if label in status.com_attr[com]:
-            status.com_attr[com][label] += status.attr[node][label]
+
+            for k in status.attr[node][label]:
+                if k in status.com_attr[com][label]:
+                    status.com_attr[com][label][k] += status.attr[node][label][k]
+                else:
+                    status.com_attr[com][label][k] = status.attr[node][label][k]
         else:
             status.com_attr[com][label] = status.attr[node][label]
 
