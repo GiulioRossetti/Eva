@@ -7,7 +7,6 @@ from __future__ import print_function
 import numbers
 import warnings
 from copy import deepcopy
-from collections import defaultdict
 import networkx as nx
 import numpy as np
 
@@ -245,13 +244,13 @@ def best_partition(graph,
         raise ValueError("Alpha must be positive floating point numbers in [0,1]")
 
     dendo, labels = generate_dendrogram(graph,
-                                partition,
-                                weight,
-                                resolution,
-                                randomize,
-                                random_state,
-                                alpha,
-                                )
+                                        partition,
+                                        weight,
+                                        resolution,
+                                        randomize,
+                                        random_state,
+                                        alpha,
+                                        )
     return partition_at_level(dendo, len(dendo) - 1), labels
 
 
@@ -317,6 +316,7 @@ def generate_dendrogram(graph,
     >>> for level in range(len(dendo) - 1) :
     >>>     print("partition at level", level,
     >>>           "is", partition_at_level(dendo, level))
+    :param random_state:
     :param weight:
     :type weight:
     """
@@ -366,7 +366,7 @@ def generate_dendrogram(graph,
         __one_level(current_graph, status, weight, resolution, random_state, alpha)
         new_mod = __modularity(status)
         new_purity = __overall_purity(status)
-        score = alpha * (new_purity - pur) + (1-alpha) * (new_mod - mod)
+        score = alpha * (new_purity - pur) + (1 - alpha) * (new_mod - mod)
 
         if score < __MIN:
             partition, status = __renumber(status.node2com, status)
@@ -483,8 +483,8 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha):
             com_node = status.node2com[node]
             degc_totw = status.gdegrees.get(node, 0.) / (status.total_weight * 2.)  # NOQA
             neigh_communities = __neighcom(node, graph, status, weight_key)
-            remove_cost = - resolution * neigh_communities.get(com_node,0) + \
-                (status.degrees.get(com_node, 0.) - status.gdegrees.get(node, 0.)) * degc_totw
+            remove_cost = - resolution * neigh_communities.get(com_node, 0) + \
+                          (status.degrees.get(com_node, 0.) - status.gdegrees.get(node, 0.)) * degc_totw
             __remove(node, com_node,
                      neigh_communities.get(com_node, 0.), status)
 
@@ -502,7 +502,7 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha):
                 incr = remove_cost + resolution * dnc - \
                        status.degrees.get(com, 0.) * degc_totw
 
-                total_incr = alpha * incr_attr + (1-alpha) * incr
+                total_incr = alpha * incr_attr + (1 - alpha) * incr
 
                 # check for increase in quality or in community size (with stable quality)
                 if total_incr > best_increase or (total_incr == best_increase and incr_size > best_size_incr):
@@ -517,40 +517,30 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha):
         new_mod = __modularity(status)
         new_purity = __overall_purity(status)
 
-        score = alpha * (new_purity - curr_purity) + (1-alpha) * (new_mod - cur_mod)
+        score = alpha * (new_purity - curr_purity) + (1 - alpha) * (new_mod - cur_mod)
 
         if score < __MIN:
             break
 
 
 def __delta_purity_size(original_attr1, new_attr2):
-
     total_original = 0
-    #purity_original = []
-    #overall = {}
-    # print(original_attr1)
-    # computing totla nodes
-    # @todo: mettere a posto
     for k, lst in original_attr1.items():
         for _, v in lst.items():
             total_original += v
 
     purity_original = np.prod([(max(x / sum(y.values()) for x in y.values())) for y in original_attr1.values()])
-    # print(purity_original)
 
     total_original /= len(original_attr1)
     total_nodes = total_original
 
     # computing original purity
 
-    # print(new_attr2)
     new_nodes = 0
     for k, lst in new_attr2.items():
         for _, v in lst.items():
             new_nodes += v
-    total_nodes += new_nodes/len(new_attr2)
-
-    # print(total_nodes)
+    total_nodes += new_nodes / len(new_attr2)
 
     updated = deepcopy(original_attr1)
 
@@ -567,8 +557,6 @@ def __delta_purity_size(original_attr1, new_attr2):
 
     purity_overall = np.prod([(max(x / sum(y.values()) for x in y.values())) for y in updated.values()])
 
-    #overall = max(list(overall.values())) / total_nodes
-
     increment = purity_overall - purity_original
     delta_size = (total_nodes - total_original) / total_original
 
@@ -577,10 +565,8 @@ def __delta_purity_size(original_attr1, new_attr2):
 
 def __overall_purity(status):
     purities = []
-    #print(status)
     for _, lst in status.com_attr.items():
         com_pur = []
-        #print(lst)
         for _, v in lst.items():
             tot = sum(v.values())
             if tot == 0:
@@ -588,12 +574,11 @@ def __overall_purity(status):
             scores = []
 
             for k in v.values():
-                scores.append(k/tot)
+                scores.append(k / tot)
 
             com_pur.append(max(scores))
         purities.append(np.prod(com_pur))
 
-   # print(np.mean(purities))
     return np.mean(purities)
 
 
@@ -628,7 +613,6 @@ def __remove(node, com, weight, status):
 
     for v in status.attr[node].keys():
         label = v
-        #print(label, status.attr[node][label])
         if label in status.com_attr[com]:
             for k, v in status.attr[node][label].items():
                 if v > 0:

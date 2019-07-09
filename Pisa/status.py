@@ -1,6 +1,7 @@
 # coding=utf-8
 from copy import deepcopy
 
+
 class Status(object):
     """
     To handle several data in one struct.
