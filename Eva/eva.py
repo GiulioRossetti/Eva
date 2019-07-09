@@ -316,7 +316,6 @@ def generate_dendrogram(graph,
     >>> for level in range(len(dendo) - 1) :
     >>>     print("partition at level", level,
     >>>           "is", partition_at_level(dendo, level))
-    :param random_state:
     :param weight:
     :type weight:
     """

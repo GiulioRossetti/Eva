@@ -1,4 +1,4 @@
-from Pisa import best_partition, modularity, purity
+from Eva import best_partition, modularity, purity
 from collections import defaultdict
 import community as louvain
 
