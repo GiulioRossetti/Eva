@@ -6,7 +6,7 @@ This package implements Pisa detection.
 Package name is Pisa but refer to python-louvain on pypi
 """
 
-from .pisa import (
+from .eva import (
     partition_at_level,
     modularity,
     best_partition,

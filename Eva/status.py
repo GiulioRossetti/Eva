@@ -1,6 +1,7 @@
 # coding=utf-8
 from copy import deepcopy
 
+
 class Status(object):
     """
     To handle several data in one struct.
@@ -67,8 +68,9 @@ class Status(object):
             temp = dict([])
             for ke, elem in attr.items():
                 temp[ke] = {}
-                for _, k in elem.items():
-                    temp[ke][k] = 1
+                for name,  k in elem.items():
+                    if name not in temp[ke]:
+                        temp[ke][name] = {k: 1}
 
             self.attr = deepcopy(temp)
             self.com_attr = deepcopy(temp)
