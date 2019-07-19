@@ -1,6 +1,6 @@
 # Eva - Community Discovery for Labeled graphs.
 
-[![Build Status](https://travis-ci.com/GiulioRossetti/Eva.svg?token=tuER4p897Bz1ntRDYJWa&branch=master)](https://travis-ci.com/GiulioRossetti/Eva)
+[![Build Status](https://travis-ci.org/GiulioRossetti/Eva.svg?branch=master)](https://travis-ci.org/GiulioRossetti/Eva)
 [![Coverage Status](https://coveralls.io/repos/github/GiulioRossetti/Eva/badge.svg?branch=master)](https://coveralls.io/github/GiulioRossetti/Eva?branch=master)
 [![pyversions](https://img.shields.io/pypi/pyversions/eva.svg)](https://badge.fury.io/py/Eva)
 [![PyPI version](https://badge.fury.io/py/eva.svg)](https://badge.fury.io/py/Eva)
