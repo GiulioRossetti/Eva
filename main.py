@@ -1,4 +1,4 @@
-from Eva import best_partition, modularity, purity
+from Eva import eva_best_partition, modularity, purity
 from collections import defaultdict
 import community as louvain
 
@@ -22,7 +22,7 @@ print(f"Original Louvain Modularity: {mods}")
 
 
 for alpha in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
-    part, com_labels = best_partition(g, alpha=alpha)
+    part, com_labels = eva_best_partition(g, alpha=alpha)
 
     print("\n")
     print(f"{alpha}\{1-alpha}")
