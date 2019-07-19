@@ -13,11 +13,11 @@ __email__ = "giulio.rossetti@gmail.com"
 #    long_description = f.read()
 
 
-setup(name='ndlib',
+setup(name='eva',
       version='0.1.0',
       license='BSD-Clause-2',
       description='Eva: Community Discovery for labeled graphs',
-      url='https://github.com/GiulioRossetti/ndlib',
+      url='https://github.com/GiulioRossetti/eva',
       author=['Giulio Rossetti', 'Salvatore Citraro'],
       author_email='giulio.rossetti@gmail.com',
       classifiers=[
