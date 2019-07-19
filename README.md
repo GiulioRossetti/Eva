@@ -2,9 +2,8 @@
 
 [![Build Status](https://travis-ci.org/GiulioRossetti/Eva.svg?branch=master)](https://travis-ci.org/GiulioRossetti/Eva)
 [![Coverage Status](https://coveralls.io/repos/github/GiulioRossetti/Eva/badge.svg?branch=master)](https://coveralls.io/github/GiulioRossetti/Eva?branch=master)
-[![pyversions](https://img.shields.io/pypi/pyversions/eva.svg)](https://badge.fury.io/py/Eva)
-[![PyPI version](https://badge.fury.io/py/eva.svg)](https://badge.fury.io/py/Eva)
-[![Updates](https://pyup.io/repos/github/GiulioRossetti/Eva/shield.svg)](https://pyup.io/repos/github/GiulioRossetti/Eva/)
+[![pyversions](https://img.shields.io/pypi/pyversions/eva_lcd.svg)](https://badge.fury.io/py/eva_lcd)
+[![PyPI version](https://badge.fury.io/py/eva_lcd.svg)](https://badge.fury.io/py/eva_lcd)
 
 
 ## Citation
@@ -17,7 +16,7 @@ In order to install the package just download (or clone) the current project and
 
 Alternatively use pip:
 ```bash
-sudo pip install eva
+sudo pip install eva_lcd
 ```
 
 Eva is written in python and requires the following package to run:

@@ -13,7 +13,7 @@ __email__ = "giulio.rossetti@gmail.com"
 #    long_description = f.read()
 
 
-setup(name='eva',
+setup(name='eva_lcd',
       version='0.1.0',
       license='BSD-Clause-2',
       description='Eva: Community Discovery for labeled graphs',
