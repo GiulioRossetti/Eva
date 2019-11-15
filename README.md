@@ -10,6 +10,12 @@
 ## Citation
 If you use our algorithm please cite the following works:
 
+> S. Citraro and G. Rossetti
+>
+> **EVA: Attribute-Aware Network Segmentation**
+>
+> Accepted to Commplex Networks 2019
+
 ## Installation
 
 
