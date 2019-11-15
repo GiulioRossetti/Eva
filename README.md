@@ -12,9 +12,10 @@ If you use our algorithm please cite the following works:
 
 > S. Citraro and G. Rossetti
 >
-> **EVA: Attribute-Aware Network Segmentation**
+> **Eva: Attribute-Aware Network Segmentation**
 >
-> Accepted to Commplex Networks 2019
+> Accepted to Complex Networks 2019
+> arXiv preprint https://arxiv.org/abs/1910.06599
 
 ## Installation
 
@@ -32,7 +33,7 @@ Eva is written in python and requires the following package to run:
 
 # Execution
 
-eVA can be executed specifying as input: 
+Eva can be executed specifying as input: 
 
 - a (labeled) *networkx* Graph object
 - the value of the trade-off parameter (alpha)
