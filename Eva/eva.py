@@ -438,6 +438,8 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha):
             best_com = com_node
             best_increase = 0
             best_size_incr = 0
+            n_com = len(neigh_communities)
+            ti = 0
             for com, dnc in random_state.permutation(list(neigh_communities.items())):
 
                 # increase cost label, gain community size
@@ -455,6 +457,10 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha):
                     best_increase = total_incr
                     best_size_incr = incr_size
                     best_com = com
+                else:
+                    ti += 1
+                    if ti == n_com:
+                        break
             __insert(node, best_com,
                      neigh_communities.get(best_com, 0.), status)
             if best_com != com_node:
