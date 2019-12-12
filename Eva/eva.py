@@ -10,7 +10,7 @@ from copy import deepcopy
 import networkx as nx
 import numpy as np
 from .status import Status
-
+import operator
 __all__ = ["eva_best_partition", "purity", "modularity", "generate_dendrogram", "induced_graph",
            "eva_partition_at_level"]
 
@@ -161,7 +161,8 @@ def eva_best_partition(graph,
                        resolution=1.,
                        randomize=None,
                        random_state=None,
-                       alpha=0.5):
+                       alpha=0.5,
+                       hierarchies=None):
     """Compute the partition of the graph nodes which maximises the modularity
     and label purity
 
@@ -222,6 +223,7 @@ def eva_best_partition(graph,
                                         randomize,
                                         random_state,
                                         alpha,
+                                        hierarchies
                                         )
     return eva_partition_at_level(dendo, len(dendo) - 1), labels
 
@@ -233,6 +235,7 @@ def generate_dendrogram(graph,
                         randomize=None,
                         random_state=None,
                         alpha=0.5,
+                        hierarchies=None
                         ):
     """Find communities in the graph and return the associated dendrogram
 
@@ -311,7 +314,7 @@ def generate_dendrogram(graph,
     status = Status()
     status.init(current_graph, weight, part_init)
     status_list = list()
-    __one_level(current_graph, status, weight, resolution, random_state, alpha)
+    __one_level(current_graph, status, weight, resolution, random_state, alpha, hierarchies)
     new_mod = __modularity(status)
     new_purity = __overall_purity(status)
 
@@ -323,7 +326,7 @@ def generate_dendrogram(graph,
     status.init(current_graph, weight)
 
     while True:
-        __one_level(current_graph, status, weight, resolution, random_state, alpha)
+        __one_level(current_graph, status, weight, resolution, random_state, alpha, hierarchies)
         new_mod = __modularity(status)
         new_purity = __overall_purity(status)
         score = alpha * (new_purity - pur) + (1 - alpha) * (new_mod - mod)
@@ -409,7 +412,7 @@ def __renumber(dictionary, status):
     return ret, status
 
 
-def __one_level(graph, status, weight_key, resolution, random_state, alpha):
+def __one_level(graph, status, weight_key, resolution, random_state, alpha, hierarchies=None):
     """Compute one level of communities
     """
     modified = True
@@ -445,7 +448,7 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha):
                 # increase cost label, gain community size
                 initial_labels = status.attr[com_node]
                 incr_labels = status.com_attr[com]
-                incr_attr, incr_size = __delta_purity_size(initial_labels, incr_labels)
+                incr_attr, incr_size = __delta_purity_size(initial_labels, incr_labels, hierarchies)
 
                 # increase cost modularity
                 incr = remove_cost + resolution * dnc - status.degrees.get(com, 0.) * degc_totw
@@ -475,11 +478,19 @@ def __one_level(graph, status, weight_key, resolution, random_state, alpha):
             break
 
 
-def __delta_purity_size(original_attr1, new_attr2):
+def __delta_purity_size(original_attr1, new_attr2, hierarchies=None):
     total_original = 0
     for k, lst in original_attr1.items():
         for _, v in lst.items():
             total_original += v
+
+    dumping = 1
+    if hierarchies is not None:
+        for attr in original_attr1:
+            most_freq_label=max(original_attr1[attr].items(), key=operator.itemgetter(1))[0]
+            most_freq_label_new=max(new_attr2[attr].items(), key=operator.itemgetter(1))[0]
+            d = __distance(most_freq_label, most_freq_label_new, hierarchies[attr])
+            dumping *= d
 
     purity_original = np.prod([(max(x / sum(y.values()) for x in y.values())) for y in original_attr1.values()])
 
@@ -507,7 +518,7 @@ def __delta_purity_size(original_attr1, new_attr2):
         else:
             updated[k] = lst
 
-    purity_overall = np.prod([(max(x / sum(y.values()) for x in y.values())) for y in updated.values()])
+    purity_overall = np.prod([(max(x / sum(y.values()) for x in y.values())) for y in updated.values()]) * dumping
 
     increment = purity_overall - purity_original
     delta_size = (total_nodes - total_original) / total_original
@@ -611,3 +622,8 @@ def __modularity(status):
         if links > 0:
             result += in_degree / links - ((degree / (2. * links)) ** 2)
     return result
+
+
+def __distance(value1, value2, hierarchy):
+    d = 1 - abs(hierarchy[value1] - hierarchy[value2])/(len(hierarchy))
+    return d
