@@ -5,6 +5,7 @@
 [![Build Status](https://travis-ci.org/GiulioRossetti/Eva.svg?branch=master)](https://travis-ci.org/GiulioRossetti/Eva)
 [![Coverage Status](https://coveralls.io/repos/github/GiulioRossetti/Eva/badge.svg?branch=master)](https://coveralls.io/github/GiulioRossetti/Eva?branch=master)
 [![DOI](https://zenodo.org/badge/191769795.svg)](https://zenodo.org/badge/latestdoi/191769795)
+[![PyPI download month](https://img.shields.io/pypi/dm/eva_lcd.svg?color=blue&style=plastic)](https://pypi.python.org/pypi/eva_lcd/)
 
 
 ## Citation
