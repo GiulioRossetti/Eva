@@ -11,12 +11,9 @@
 ## Citation
 If you use our algorithm please cite the following works:
 
-> S. Citraro and G. Rossetti
+> Citraro, Salvatore, and Giulio Rossetti. "Eva: Attribute-Aware Network Segmentation." International Conference on Complex Networks and Their Applications. Springer, Cham, 2019.
 >
-> **Eva: Attribute-Aware Network Segmentation**
->
-> Accepted to Complex Networks 2019
-> arXiv preprint https://arxiv.org/abs/1910.06599
+> https://arxiv.org/abs/1910.06599
 
 ## Installation
 
@@ -50,3 +47,5 @@ q = modularity(part, g)
 p = purity(com_labels)
 
 ```
+
+An example of execution is also showed in the file "EVA_example.ipynb"
