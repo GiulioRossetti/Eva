@@ -48,4 +48,4 @@ p = purity(com_labels)
 
 ```
 
-An example of execution is also showed in the file "EVA_example.ipynb"
+An example of execution is also showed in the file "EVA_Example.ipynb"
