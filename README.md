@@ -11,9 +11,10 @@
 ## Citation
 If you use our algorithm please cite the following works:
 
-> Citraro, Salvatore, and Giulio Rossetti. "Eva: Attribute-Aware Network Segmentation." International Conference on Complex Networks and Their Applications. Springer, Cham, 2019.
->
-> https://arxiv.org/abs/1910.06599
+> Citraro S., Rossetti G. (2020) Eva: Attribute-Aware Network Segmentation. In: Cherifi H., Gaito S., Mendes J., Moro E., Rocha L. (eds) Complex Networks and Their Applications VIII. COMPLEX NETWORKS 2019. Studies in Computational Intelligence, vol 881. Springer, Cham. https://doi.org/10.1007/978-3-030-36687-2_12
+
+> Citraro, S., Rossetti, G. Identifying and exploiting homogeneous communities in labeled networks. Appl Netw Sci 5, 55 (2020). https://doi.org/10.1007/s41109-020-00302-1
+
 
 ## Installation
 
