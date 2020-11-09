@@ -35,6 +35,35 @@ class EvaTestCase(unittest.TestCase):
             self.assertLessEqual(modularity(part, g), 1)
             self.assertLessEqual(purity(com_labels), 1)
 
+    def test_eva_hierarchy(self):
+
+        labels = ['one', 'two', 'three', 'four']
+        age = ["A", "B", "C"]
+        hierarchy = {'labels': {'one': 1, 'two': 2, 'three': 3, 'four': 4},
+                     'age': {'A': 1, 'B': 2, 'C': 3}}
+        g = nx.barabasi_albert_graph(100, 5)
+
+        for node in g.nodes():
+            g.add_node(node, labels=random.choice(labels), age=random.choice(age))
+
+        for alpha in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
+            part, com_labels = eva_best_partition(g, alpha=alpha, hierarchies=hierarchy)
+
+            coms = defaultdict(int)
+            for n, c in part.items():
+                coms[c] += 1
+
+            for k, v in coms.items():
+                l_count = 0
+                for l, lst in com_labels[k].items():
+                    for _, v in lst.items():
+                        l_count += v
+                l_count /= len(com_labels[k].items())
+                self.assertEqual(coms[k], l_count)
+
+            self.assertLessEqual(modularity(part, g), 1)
+            self.assertLessEqual(purity(com_labels), 1)
+
 
 if __name__ == '__main__':
     unittest.main()
