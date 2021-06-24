@@ -14,7 +14,7 @@ __email__ = "giulio.rossetti@gmail.com"
 
 
 setup(name='eva_lcd',
-      version='0.1.0',
+      version='0.1.1',
       license='BSD-Clause-2',
       description='Eva: Community Discovery for labeled graphs',
       url='https://github.com/GiulioRossetti/eva',
@@ -41,6 +41,6 @@ setup(name='eva_lcd',
           'Programming Language :: Python :: 3'
       ],
       keywords='complex-networks community-discovery labeled-graph',
-      install_requires=['numpy', 'networkx', ''],
+      install_requires=['numpy', 'networkx>=2.4', ''],
       packages=find_packages(exclude=["*.test", "*.test.*", "test.*", "test", "Eva.test", "Eva.test.*"]),
       )

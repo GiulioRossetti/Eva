@@ -30,7 +30,7 @@ class EvaTestCase(unittest.TestCase):
                     for _, v in lst.items():
                         l_count += v
                 l_count /= len(com_labels[k].items())
-                self.assertEquals(coms[k], l_count)
+                self.assertEqual(coms[k], l_count)
 
             self.assertLessEqual(modularity(part, g), 1)
             self.assertLessEqual(purity(com_labels), 1)

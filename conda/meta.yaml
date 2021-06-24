@@ -1,0 +1,30 @@
+package:
+  name: "eva_lcd"
+  version: "0.1.1"
+
+source:
+  git_rev: v0.1.1
+  git_url: https://github.com/GiulioRossetti/eva
+
+requirements:
+  host:
+    - python
+    - setuptools
+  build:
+    - python
+    - setuptools
+  run:
+    - python>=3.7
+    - networkx>2.4
+    - numpy
+
+about:
+  home: https://github.com/GiulioRossetti/eva
+  license: BSD-2-Clause
+  license_familY: BSD
+  license_file: LICENSE
+  summary: "Eva - Community Discovery for Labeled graphs"
+
+extra:
+  recipe-maintainers:
+    - GiulioRossetti
